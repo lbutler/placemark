@@ -77,38 +77,51 @@ class FlatbushFeatureIndex {
   }
 
   neighbor(coord: Position, searchDistance: number): Position {
-    let nextCoord = coord;
     const [lng, lat] = coord;
 
-    const rawIndexes = uniq(around(this.index, lng, lat, 1));
-    const found = uniq(
+    const rawIndexes = uniq(
+      around(this.index, lng, lat, Infinity, searchDistance)
+    );
+    const foundFeatures = uniq(
       rawIndexes.map((rawIndex) => this.features[this.indexes[rawIndex]])
     );
 
-    if (found.length > 0 && found[0]?.feature?.geometry?.type === "Point") {
-      const howFar = distance(found[0].feature.geometry.coordinates, coord, {
-        units: "meters",
-      });
-      if (howFar < searchDistance) {
-        nextCoord = found[0].feature.geometry.coordinates;
-      }
-    } else if (
-      found.length > 0 &&
-      found[0]?.feature?.geometry?.type !== "Point"
-    ) {
-      const line =
-        found[0]?.feature?.geometry?.type === "LineString"
-          ? found[0].feature.geometry
-          : polygonToLine(found[0].feature.geometry);
-      const howFar = nearestPointOnLine(line, coord, {
-        units: "meters",
-      });
-      if (howFar.properties.dist && howFar.properties.dist < searchDistance) {
-        nextCoord = howFar.geometry.coordinates;
-      }
-    }
+    let closestCoords = coord;
+    let shortestDistance = searchDistance;
 
-    return nextCoord;
+    foundFeatures.forEach((feature) => {
+      let distanceToFeature: number | undefined;
+      let currentCoords;
+
+      if (feature?.feature?.geometry?.type === "Point") {
+        currentCoords = feature.feature.geometry.coordinates;
+        distanceToFeature = distance(currentCoords, coord, { units: "meters" });
+      } else if (
+        feature?.feature?.geometry?.type === "LineString" ||
+        feature?.feature?.geometry?.type === "Polygon"
+      ) {
+        const line =
+          feature.feature.geometry.type === "LineString"
+            ? feature.feature.geometry
+            : polygonToLine(feature.feature.geometry);
+        const nearestPoint = nearestPointOnLine(line, coord, {
+          units: "meters",
+        });
+        currentCoords = nearestPoint.geometry.coordinates;
+        distanceToFeature = nearestPoint.properties.dist;
+      }
+
+      if (
+        distanceToFeature &&
+        currentCoords &&
+        distanceToFeature < shortestDistance
+      ) {
+        shortestDistance = distanceToFeature;
+        closestCoords = currentCoords;
+      }
+    });
+
+    return closestCoords;
   }
 
   search(box: Box, selection: Sel): Sel {
