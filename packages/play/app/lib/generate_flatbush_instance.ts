@@ -1,5 +1,11 @@
 import Flatbush from "flatbush";
-import type { IFeature, IWrappedFeature, Point, Position } from "types";
+import type {
+  IFeature,
+  IWrappedFeature,
+  Point,
+  Position,
+  Feature,
+} from "types";
 import { generateSyntheticPoints } from "app/lib/pmap/generate_synthetic_points";
 import { getExtents } from "app/lib/geometry";
 import uniq from "lodash/uniq";
@@ -34,6 +40,34 @@ function boxTosearchArgs(box: Box): [number, number, number, number] {
   const minY = Math.min(box[0][1], box[1][1]);
   const maxY = Math.max(box[0][1], box[1][1]);
   return [minX, minY, maxX, maxY];
+}
+
+function calculateDistanceToFeature(
+  feature: IWrappedFeature<Feature>,
+  coord: Position
+) {
+  switch (feature?.feature?.geometry?.type) {
+    case "Point":
+      return {
+        coords: feature.feature.geometry.coordinates,
+        distance: distance(feature.feature.geometry.coordinates, coord, {
+          units: "meters",
+        }),
+      };
+    case "LineString":
+    case "Polygon":
+      const line =
+        feature.feature.geometry.type === "LineString"
+          ? feature.feature.geometry
+          : polygonToLine(feature.feature.geometry);
+      const nearestPoint = nearestPointOnLine(line, coord, { units: "meters" });
+      return {
+        coords: nearestPoint.geometry.coordinates,
+        distance: nearestPoint.properties.dist,
+      };
+    default:
+      return { coords: coord, distance: undefined };
+  }
 }
 
 class FlatbushFeatureIndex {
@@ -78,7 +112,6 @@ class FlatbushFeatureIndex {
 
   neighbor(coord: Position, searchDistance: number): Position {
     const [lng, lat] = coord;
-
     const rawIndexes = uniq(
       around(this.index, lng, lat, Infinity, searchDistance)
     );
@@ -90,34 +123,10 @@ class FlatbushFeatureIndex {
     let shortestDistance = searchDistance;
 
     foundFeatures.forEach((feature) => {
-      let distanceToFeature: number | undefined;
-      let currentCoords;
-
-      if (feature?.feature?.geometry?.type === "Point") {
-        currentCoords = feature.feature.geometry.coordinates;
-        distanceToFeature = distance(currentCoords, coord, { units: "meters" });
-      } else if (
-        feature?.feature?.geometry?.type === "LineString" ||
-        feature?.feature?.geometry?.type === "Polygon"
-      ) {
-        const line =
-          feature.feature.geometry.type === "LineString"
-            ? feature.feature.geometry
-            : polygonToLine(feature.feature.geometry);
-        const nearestPoint = nearestPointOnLine(line, coord, {
-          units: "meters",
-        });
-        currentCoords = nearestPoint.geometry.coordinates;
-        distanceToFeature = nearestPoint.properties.dist;
-      }
-
-      if (
-        distanceToFeature &&
-        currentCoords &&
-        distanceToFeature < shortestDistance
-      ) {
-        shortestDistance = distanceToFeature;
-        closestCoords = currentCoords;
+      const { coords, distance } = calculateDistanceToFeature(feature, coord);
+      if (distance !== undefined && distance < shortestDistance) {
+        shortestDistance = distance;
+        closestCoords = coords;
       }
     });
 

@@ -141,7 +141,7 @@ export function useLineHandlers({
       if (altHeld.current && lastCoord) {
         const zoom = e.target.getZoom();
         const meters = metersPerPixel(nextCoord[1], zoom);
-        const searchDistance = meters * 8;
+        const searchDistance = meters * 12;
         nextCoord = flatbushInstance.neighbor(nextCoord, searchDistance);
       }
 
