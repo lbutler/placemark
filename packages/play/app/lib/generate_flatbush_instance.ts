@@ -8,6 +8,8 @@ import { decodeId } from "./id";
 import { Sel } from "state/jotai";
 import { around } from "geoflatbush";
 import distance from "@turf/distance";
+import nearestPointOnLine from "@turf/nearest-point-on-line";
+import polygonToLine from "@turf/polygon-to-line";
 
 export const EmptyIndex = {
   type: "none",
@@ -89,6 +91,20 @@ class FlatbushFeatureIndex {
       });
       if (howFar < searchDistance) {
         nextCoord = found[0].feature.geometry.coordinates;
+      }
+    } else if (
+      found.length > 0 &&
+      found[0]?.feature?.geometry?.type !== "Point"
+    ) {
+      const line =
+        found[0]?.feature?.geometry?.type === "LineString"
+          ? found[0].feature.geometry
+          : polygonToLine(found[0].feature.geometry);
+      const howFar = nearestPointOnLine(line, coord, {
+        units: "meters",
+      });
+      if (howFar.properties.dist && howFar.properties.dist < searchDistance) {
+        nextCoord = howFar.geometry.coordinates;
       }
     }
 
