@@ -77,22 +77,27 @@ export function useNoneHandlers({
             // in selecting "vertexes" because it only has one.
             // Instead, act as if you didn’t have a single
             // feature selection.
+            console.log("feature flatbush instance point");
             index = generateFeaturesFlatbushInstance(
               filterLockedFeatures({ featureMap, folderMap })
             );
           } else {
+            console.log("vertex flatbush instance");
             index = generateVertexFlatbushInstance(
               feature,
               UIDMap.getIntID(idMap, selection.id)
             );
           }
         } else {
+          console.log("feature flatbush instance not point");
           index = generateFeaturesFlatbushInstance(
             filterLockedFeatures({ featureMap, folderMap })
           );
         }
 
         if (index) {
+          console.log(index);
+          console.log("how many times is this called");
           setFlatbushInstance(index);
           setMode({ mode: Mode.LASSO });
           setEphemeralState({

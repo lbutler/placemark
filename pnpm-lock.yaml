@@ -899,6 +899,9 @@ importers:
       fuse.js:
         specifier: ^6.6.2
         version: 6.6.2
+      geoflatbush:
+        specifier: ^1.0.0
+        version: 1.0.0
       geometric:
         specifier: ^2.5.0
         version: 2.5.4
@@ -1086,6 +1089,9 @@ importers:
       '@types/flatbush':
         specifier: ^3.3.0
         version: 3.3.0
+      '@types/geoflatbush':
+        specifier: ^1.0.4
+        version: 1.0.4
       '@types/lodash':
         specifier: ^4.14.184
         version: 4.14.202
@@ -8256,6 +8262,12 @@ packages:
     resolution: {integrity: sha512-fSPSZ1d5v3DaAmWhuoFSCeaFA7JHdtcvF5F2Pdo0cAdrV4aRl9tCcKl1BuV7/QYWLN/vyefPGrsUHMGGtq6ASQ==}
     dev: true
 
+  /@types/geoflatbush@1.0.4:
+    resolution: {integrity: sha512-exotNNG0hNPNeiHeAxeUxdQz2kkG9QEEqirLSWSh11GgkIeqWEeRJM+lmH1vChcNyHHFOtW6p6WTZXdZlwEleQ==}
+    dependencies:
+      flatbush: 4.4.0
+    dev: true
+
   /@types/geojson@7946.0.14:
     resolution: {integrity: sha512-WCfD5Ht3ZesJUsONdhvm84dmzWOiOzOAqOncN0++w0lBw1o8OuDNJF2McvvCef/yBqb/HYRahp1BYtODFQ8bRg==}
 
@@ -11490,6 +11502,12 @@ packages:
       flatqueue: 1.2.1
     dev: false
 
+  /flatbush@4.4.0:
+    resolution: {integrity: sha512-cf6G+sfy/+/FLH7Ls1URQ5GCRlXgwgqUZiEsMNrMZqb3Us3EkKmzUlKbnyoBy/4wI4oLJ+8cyCQoKJIVm92Fmg==}
+    dependencies:
+      flatqueue: 2.0.3
+    dev: true
+
   /flatgeobuf@3.27.2(ol@8.2.0):
     resolution: {integrity: sha512-iXI7vuFC3i5YvANtTqJ2ZKO/HnlRNT/ieN6rvJeHl28ztABAW7R0ZK7agdbF+9w+4jFzAWFVs7LaJJJtYI+BAQ==}
     peerDependencies:
@@ -11504,6 +11522,11 @@ packages:
   /flatqueue@1.2.1:
     resolution: {integrity: sha512-X86TpWS1rGuY7m382HuA9vngLeDuWA9lJvhEG+GfgKMV5onSvx5a71cl7GMbXzhWtlN9dGfqOBrpfqeOtUfGYQ==}
     dev: false
+
+  /flatqueue@2.0.3:
+    resolution: {integrity: sha512-RZCWZNkmxzUOh8jqEcEGZCycb3B8KAfpPwg3H//cURasunYxsg1eIvE+QDSjX+ZPHTIVfINfK1aLTrVKKO0i4g==}
+    engines: {node: '>= 12.17.0'}
+    dev: true
 
   /flatted@3.2.9:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
@@ -11655,6 +11678,12 @@ packages:
   /gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
+
+  /geoflatbush@1.0.0:
+    resolution: {integrity: sha512-epTkkL1KUbbJDRJW2AcN2yKkj4GHTivXWgssZZtYtLRh8VowckqBjxUCIJq8ZAcUXkJz31+Tu1d9F2sTq5klvg==}
+    dependencies:
+      flatqueue: 1.2.1
+    dev: false
 
   /geographiclib@1.48.0:
     resolution: {integrity: sha512-WIpDKKj2Gu+E4jkF3f3fg7OPF6T1/35tQXKc4jLLQrwjNiTZ5KrrYF5Gp0dQ/YbJIoCjb9vs2/abWTRsCEoi2w==}

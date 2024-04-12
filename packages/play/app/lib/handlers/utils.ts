@@ -53,3 +53,15 @@ export function createOrUpdateFeature({
     },
   };
 }
+
+export function metersPerPixel(latitude: number, zoomLevel: number): number {
+  const earthCircumference = 40075000; // in meters
+  const latitudeRadians = (latitude * Math.PI) / 180; // Convert latitude to radians
+
+  const worldMapPixels = 256 * Math.pow(2, zoomLevel);
+  const metersPerPixelAtEquator = earthCircumference / worldMapPixels;
+  const adjustedMetersPerPixel =
+    metersPerPixelAtEquator * Math.cos(latitudeRadians);
+
+  return adjustedMetersPerPixel;
+}

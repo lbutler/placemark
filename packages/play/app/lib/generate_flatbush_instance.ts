@@ -1,16 +1,21 @@
 import Flatbush from "flatbush";
-import type { IFeature, IWrappedFeature, Point } from "types";
+import type { IFeature, IWrappedFeature, Point, Position } from "types";
 import { generateSyntheticPoints } from "app/lib/pmap/generate_synthetic_points";
 import { getExtents } from "app/lib/geometry";
 import uniq from "lodash/uniq";
 import { USelection } from "state";
 import { decodeId } from "./id";
 import { Sel } from "state/jotai";
+import { around } from "geoflatbush";
+import distance from "@turf/distance";
 
 export const EmptyIndex = {
   type: "none",
   search: () => {
     return USelection.none();
+  },
+  neighbor: (coord: Position) => {
+    return coord;
   },
 } as const;
 
@@ -69,6 +74,27 @@ class FlatbushFeatureIndex {
     this.index = fb;
   }
 
+  neighbor(coord: Position, searchDistance: number): Position {
+    let nextCoord = coord;
+    const [lng, lat] = coord;
+
+    const rawIndexes = uniq(around(this.index, lng, lat, 1));
+    const found = uniq(
+      rawIndexes.map((rawIndex) => this.features[this.indexes[rawIndex]])
+    );
+
+    if (found.length > 0 && found[0]?.feature?.geometry?.type === "Point") {
+      const howFar = distance(found[0].feature.geometry.coordinates, coord, {
+        units: "meters",
+      });
+      if (howFar < searchDistance) {
+        nextCoord = found[0].feature.geometry.coordinates;
+      }
+    }
+
+    return nextCoord;
+  }
+
   search(box: Box, selection: Sel): Sel {
     const rawIndexes = uniq(this.index.search(...boxTosearchArgs(box)));
     const found = uniq(
@@ -115,6 +141,10 @@ class FlatbushVertexIndex {
 
     this.vertexes = vertexes;
     this.index = fb;
+  }
+
+  neighbor(coord: Position): Position {
+    return coord;
   }
 
   search(box: Box, selection: Sel): Sel {

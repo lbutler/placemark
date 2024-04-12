@@ -7,12 +7,20 @@ import replaceCoordinates from "app/lib/replace_coordinates";
 import { useSetAtom } from "jotai";
 import { usePopMoment } from "app/lib/persistence/shared";
 import { CURSOR_DEFAULT } from "app/lib/constants";
-import { createOrUpdateFeature, getMapCoord } from "./utils";
+import { createOrUpdateFeature, getMapCoord, metersPerPixel } from "./utils";
 import { useRef } from "react";
-import { lockDirection, useShiftHeld } from "app/hooks/use_held";
+import { lockDirection, useShiftHeld, useAltHeld } from "app/hooks/use_held";
+
+import { filterLockedFeatures } from "app/lib/folder";
+import {
+  FlatbushLike,
+  generateFeaturesFlatbushInstance,
+} from "app/lib/generate_flatbush_instance";
 
 export function useLineHandlers({
   rep,
+  flatbushInstance,
+  setFlatbushInstance,
   featureMap,
   folderMap,
   selection,
@@ -27,10 +35,21 @@ export function useLineHandlers({
   const popMoment = usePopMoment();
   const usingTouchEvents = useRef<boolean>(false);
   const shiftHeld = useShiftHeld();
+  const altHeld = useAltHeld();
 
   const handlers: Handlers = {
     click: (e) => {
       const { modeOptions } = mode;
+
+      console.log("useLineHandler click - updating index");
+
+      let index: undefined | FlatbushLike = undefined;
+      index = generateFeaturesFlatbushInstance(
+        filterLockedFeatures({ featureMap, folderMap })
+      );
+      console.log(index);
+
+      setFlatbushInstance(index); // Access setFlatbushInstance here
 
       if (selection.type === "none" || selection.type === "folder") {
         /**
@@ -38,6 +57,8 @@ export function useLineHandlers({
          * selection
          */
         const lineString = utils.newLineStringFromClickEvent(e);
+
+        console.log(`selection.type === "none" || selection.type === "folder"`);
 
         const putFeature = createOrUpdateFeature({
           mode,
@@ -57,6 +78,8 @@ export function useLineHandlers({
          * Appending to an existing line. Push a coordinate
          * onto it.
          */
+        console.log(`selection.type === "single"`);
+
         const position = getMapCoord(e);
         const wrappedFeature = featureMap.get(selection.id);
         if (!wrappedFeature) {
@@ -113,6 +136,13 @@ export function useLineHandlers({
       const lastCoord = feature.geometry.coordinates.at(-2);
       if (shiftHeld.current && lastCoord) {
         nextCoord = lockDirection(lastCoord, nextCoord);
+      }
+
+      if (altHeld.current && lastCoord) {
+        const zoom = e.target.getZoom();
+        const meters = metersPerPixel(nextCoord[1], zoom);
+        const searchDistance = meters * 8;
+        nextCoord = flatbushInstance.neighbor(nextCoord, searchDistance);
       }
 
       void transact({
