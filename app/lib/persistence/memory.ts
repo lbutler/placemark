@@ -11,6 +11,7 @@ import type {
   IPersistence,
   MetaPair,
   MetaUpdatesInput,
+  TransactOptions,
 } from "app/lib/persistence/ipersistence";
 import {
   fMoment,
@@ -103,10 +104,14 @@ export class MemPersistence implements IPersistence {
   }
 
   useTransact() {
-    return (partialMoment: Partial<MomentInput>) => {
+    return (partialMoment: Partial<MomentInput> & TransactOptions) => {
       trackMoment(partialMoment);
       const moment: MomentInput = { ...EMPTY_MOMENT, ...partialMoment };
       const result = this.apply(moment);
+
+      if (partialMoment.quiet) {
+        return Promise.resolve();
+      }
       this.store.set(
         momentLogAtom,
         UMomentLog.pushMoment(this.store.get(momentLogAtom), result)
